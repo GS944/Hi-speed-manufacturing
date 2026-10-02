@@ -97,17 +97,55 @@ def _trim(grid: list[list[Cell]]) -> list[list[Cell]]:
     return [list(row[: last_c + 1]) + [None] * max(0, last_c + 1 - len(row)) for row in grid[: last_r + 1]]
 
 
+def _xlsx_merged_ranges(path: Path) -> dict[str, list[tuple[int, int, int, int]]]:
+    """Merged-cell ranges per sheet, read straight from the workbook XML (read-only mode does not expose them)."""
+    import html
+    import re
+    import zipfile
+    from openpyxl.utils.cell import range_boundaries
+
+    def attr(tag: str, name: str) -> str:
+        m = re.search(rf'\b{name}="([^"]*)"', tag)
+        return m.group(1) if m else ""
+
+    out: dict[str, list] = {}
+    with zipfile.ZipFile(path) as z:
+        wb_xml = z.read("xl/workbook.xml").decode("utf-8", "ignore")
+        rels = z.read("xl/_rels/workbook.xml.rels").decode("utf-8", "ignore")
+        targets = {attr(t, "Id"): attr(t, "Target") for t in re.findall(r"<Relationship\b[^>]*>", rels)}
+        for tag in re.findall(r"<sheet\b[^>]*>", wb_xml):
+            name, rid = attr(tag, "name"), attr(tag, "r:id")
+            target = targets.get(rid, "").lstrip("/")
+            target = target if target.startswith("xl/") else f"xl/{target}"
+            try:
+                xml = z.read(target).decode("utf-8", "ignore")
+            except KeyError:
+                continue
+            ranges = []
+            for ref in re.findall(r'<mergeCell\s+ref="([A-Z]+\d+:[A-Z]+\d+)"', xml):
+                c1, r1, c2, r2 = range_boundaries(ref)
+                ranges.append((r1 - 1, c1 - 1, r2 - 1, c2 - 1))
+            out[html.unescape(name)] = ranges
+    return out
+
+
 def _read_openpyxl(path: Path) -> list[RawSheet]:
+    """Streams cell values in read-only mode: far less memory than loading the full workbook with its styles."""
     import openpyxl
-    wb = openpyxl.load_workbook(path, read_only=False, data_only=True)
+    try:
+        merged_by_sheet = _xlsx_merged_ranges(path)
+    except Exception:  # noqa: BLE001 - merged ranges only refine segmentation; never fail the import over them
+        merged_by_sheet = {}
+    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
     out = []
-    for ws in wb.worksheets:
-        if ws.sheet_state != "visible" and ws.max_row <= 1:
-            continue
-        grid = [[clean(v) for v in row] for row in ws.iter_rows(values_only=True)]
-        merged = [(m.min_row - 1, m.min_col - 1, m.max_row - 1, m.max_col - 1) for m in ws.merged_cells.ranges]
-        out.append(RawSheet(ws.title, _trim(grid), merged))
-    wb.close()
+    try:
+        for ws in wb.worksheets:
+            if getattr(ws, "sheet_state", "visible") != "visible" and (ws.max_row or 0) <= 1:
+                continue
+            grid = [[clean(v) for v in row] for row in ws.iter_rows(values_only=True)]
+            out.append(RawSheet(ws.title, _trim(grid), merged_by_sheet.get(ws.title, [])))
+    finally:
+        wb.close()
     return out
 
 

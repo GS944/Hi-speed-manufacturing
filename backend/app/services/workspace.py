@@ -48,6 +48,11 @@ def invalidate() -> None:
         db.commit()
 
 
+def peek() -> "Workspace | None":
+    """The last built workspace, possibly stale, without triggering a rebuild (cheap; for list/status screens)."""
+    return _cache
+
+
 def get() -> "Workspace":
     global _cache
     version = _db_version()

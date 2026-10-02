@@ -77,7 +77,8 @@ def _file_json(f: DataFile, tables: list[DataTable] | None = None) -> dict:
 
 
 def _table_brief(t: DataTable) -> dict:
-    q = workspace.get().quality.get(t.id) if t.kind == "table" and t.active else None
+    ws = workspace.peek()                     # never rebuild analytics just to list files (cheap status polling)
+    q = ws.quality.get(t.id) if ws and t.kind == "table" and t.active else None
     return {"id": t.id, "file_id": t.file_id, "title": t.title, "sheet": t.sheet_name, "range": t.range_ref, "kind": t.kind,
             "role": t.role, "role_label": (t.profile or {}).get("type_label") or ("Print template" if t.kind == "form" else t.role),
             "confidence": t.role_confidence, "rows": t.n_rows, "columns": len(t.columns or []), "active": t.active,

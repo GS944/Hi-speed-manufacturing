@@ -56,6 +56,19 @@ def process_file(file_id: int) -> None:
             db.commit()
             log.error("processing %s failed\n%s", file_id, traceback.format_exc())
         workspace.invalidate()
+    _release_memory()
+
+
+def _release_memory() -> None:
+    """Workbook parsing creates many short-lived objects; hand the memory back to the OS so small instances
+    (512 MB) keep headroom for the next upload."""
+    import ctypes
+    import gc
+    gc.collect()
+    try:
+        ctypes.CDLL("libc.so.6").malloc_trim(0)      # Linux/glibc only; harmless elsewhere
+    except (OSError, AttributeError):
+        pass
 
 
 def _store_table(db, f: DataFile, raw, onto: dict) -> None:
