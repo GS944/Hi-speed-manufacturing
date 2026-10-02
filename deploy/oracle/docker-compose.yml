@@ -1,0 +1,32 @@
+# OrderTrack backend on a single server (e.g. Oracle Cloud Always Free) with automatic HTTPS.
+# Used by deploy/oracle/setup.sh and update.sh - see DEPLOYMENT.md, "Oracle Cloud".
+services:
+  app:
+    build:
+      context: ../..
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ordertrack-data:/data
+    expose:
+      - "8000"
+
+  caddy:                              # HTTPS reverse proxy; gets and renews a free Let's Encrypt certificate
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  ordertrack-data:
+  caddy-data:
+  caddy-config:

@@ -25,3 +25,6 @@ __pycache__/
 .env.local
 .env*.local
 .DS_Store
+
+# server settings for deploy/oracle
+deploy/oracle/.env
