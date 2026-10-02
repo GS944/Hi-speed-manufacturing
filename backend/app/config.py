@@ -65,7 +65,9 @@ IS_SQLITE = DATABASE_URL.startswith("sqlite")
 
 # ---- workbook file storage
 S3_BUCKET = _env("S3_BUCKET")
-S3_ENDPOINT_URL = _env("S3_ENDPOINT_URL") or None      # e.g. https://s3.us-west-004.backblazeb2.com
+S3_ENDPOINT_URL = _env("S3_ENDPOINT_URL").rstrip("/") or None      # e.g. https://s3.us-west-004.backblazeb2.com
+if S3_ENDPOINT_URL and "://" not in S3_ENDPOINT_URL:    # accept the endpoint exactly as providers display it
+    S3_ENDPOINT_URL = "https://" + S3_ENDPOINT_URL
 S3_REGION = _env("S3_REGION") or None
 if S3_ENDPOINT_URL and not S3_REGION:      # derive the signing region from well-known endpoints
     import re as _re
