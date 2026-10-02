@@ -67,6 +67,10 @@ IS_SQLITE = DATABASE_URL.startswith("sqlite")
 S3_BUCKET = _env("S3_BUCKET")
 S3_ENDPOINT_URL = _env("S3_ENDPOINT_URL") or None      # e.g. https://s3.us-west-004.backblazeb2.com
 S3_REGION = _env("S3_REGION") or None
+if S3_ENDPOINT_URL and not S3_REGION:      # derive the signing region from well-known endpoints
+    import re as _re
+    _m = _re.search(r"s3\.([a-z0-9-]+)\.backblazeb2\.com", S3_ENDPOINT_URL)
+    S3_REGION = _m.group(1) if _m else ("auto" if "r2.cloudflarestorage.com" in S3_ENDPOINT_URL else "us-east-1")
 S3_ACCESS_KEY_ID = _env("S3_ACCESS_KEY_ID")
 S3_SECRET_ACCESS_KEY = _env("S3_SECRET_ACCESS_KEY")
 S3_PREFIX = _env("S3_PREFIX", "ordertrack/").lstrip("/")

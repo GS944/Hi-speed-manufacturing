@@ -16,7 +16,7 @@ def utcnow() -> datetime:
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False, "timeout": 30} if IS_SQLITE else {"connect_timeout": 15},
+    connect_args={"check_same_thread": False, "timeout": 30} if IS_SQLITE else {"connect_timeout": 15, "prepare_threshold": None},
     pool_pre_ping=True,                       # serverless Postgres (Neon) drops idle connections
     **({} if IS_SQLITE else {"pool_size": 5, "max_overflow": 5, "pool_recycle": 280}),
 )
