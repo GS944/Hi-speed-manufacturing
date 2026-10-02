@@ -149,25 +149,31 @@ def discover_derived(fields: dict, values_by_col: dict[str, list], min_support: 
     is filled (blank operands count as 0). Only near-fully-filled columns can be targets, which
     separates the real formula from its algebraic mirror images. Recomputed on every edit."""
     def num(v):
-        return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+        return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else np.nan
+
     roles = [r for r in QTY_ROLES if r in fields]
-    cols = {r: [num(v) for v in values_by_col.get(fields[r], [])] for r in roles}
+    raw = {r: np.array([num(v) for v in values_by_col.get(fields[r], [])], dtype=float) for r in roles}
+    filled = {r: ~np.isnan(a) for r, a in raw.items()}
+    zero = {r: np.nan_to_num(a, nan=0.0) for r, a in raw.items()}        # blank operands count as 0
     out = []
     for t in roles:
-        tv = cols[t]
-        idx = [i for i, v in enumerate(tv) if v is not None]
+        mask = filled[t]
+        n = int(mask.sum())
         # a formula column is filled on (almost) every row, input columns have gaps
-        if len(idx) < min_support or len(idx) < 0.9 * len(tv):
+        if n < min_support or n < 0.9 * len(mask):
             continue
+        tv = zero[t][mask]
         others = [r for r in roles if r != t]
         best = None
         for a in others:
+            av = zero[a][mask]
             for subs in [(b,) for b in others if b != a] + [(b, c) for b in others for c in others if len({a, b, c}) == 3 and b < c]:
-                ok = sum(1 for i in idx if abs(tv[i] - ((cols[a][i] or 0) - sum(cols[s][i] or 0 for s in subs))) < 1e-6)
-                informative = sum(1 for i in idx if cols[a][i] and any(cols[s][i] for s in subs))
-                if ok / len(idx) >= 0.98 and informative >= min_support // 3:
+                sv = sum(zero[x][mask] for x in subs)
+                ok = int(np.count_nonzero(np.abs(tv - (av - sv)) < 1e-6))
+                informative = int(np.count_nonzero((av != 0) & np.any([zero[x][mask] != 0 for x in subs], axis=0)))
+                if ok / n >= 0.98 and informative >= min_support // 3:
                     if best is None or len(subs) < len(best[1]):
-                        best = (a, subs, ok / len(idx))
+                        best = (a, subs, ok / n)
         if best:
             out.append({"target": t, "plus": best[0], "minus": list(best[1]), "support": round(best[2], 4)})
     # order so that a relation is computed after the relations it depends on

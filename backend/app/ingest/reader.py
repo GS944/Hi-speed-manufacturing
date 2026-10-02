@@ -88,12 +88,15 @@ def read_workbook(path: Path) -> list[RawSheet]:
 
 
 def _trim(grid: list[list[Cell]]) -> list[list[Cell]]:
+    """Drop trailing empty rows/columns. Cells are already cleaned, so empty == None."""
     last_r, last_c = -1, -1
     for r, row in enumerate(grid):
-        for c, v in enumerate(row):
-            if not is_empty(v):
-                last_r = r
-                last_c = max(last_c, c)
+        if any(v is not None for v in row):
+            last_r = r
+            for c in range(len(row) - 1, last_c, -1):     # only columns beyond the widest seen so far
+                if row[c] is not None:
+                    last_c = c
+                    break
     return [list(row[: last_c + 1]) + [None] * max(0, last_c + 1 - len(row)) for row in grid[: last_r + 1]]
 
 
@@ -156,21 +159,27 @@ def _read_xlrd(path: Path) -> list[RawSheet]:
     except NotImplementedError:
         wb = xlrd.open_workbook(str(path))
     out = []
+    blank_types = {xlrd.XL_CELL_EMPTY, xlrd.XL_CELL_BLANK, xlrd.XL_CELL_ERROR}
     for sh in wb.sheets():
         grid = []
+        empty_row = [None] * sh.ncols
         for r in range(sh.nrows):
+            types = sh.row_types(r)                       # whole-row access is much faster than per-cell
+            if all(t in blank_types for t in types):      # formatted but empty rows are common in old sheets
+                grid.append(empty_row)
+                continue
             row = []
-            for c in range(sh.ncols):
-                cell = sh.cell(r, c)
-                if cell.ctype == xlrd.XL_CELL_DATE:
-                    try:
-                        row.append(xlrd.xldate_as_datetime(cell.value, wb.datemode))
-                    except Exception:
-                        row.append(clean(cell.value))
-                elif cell.ctype in (xlrd.XL_CELL_EMPTY, xlrd.XL_CELL_BLANK, xlrd.XL_CELL_ERROR):
+            for t, v in zip(types, sh.row_values(r)):
+                if t in blank_types:
                     row.append(None)
+                elif t == xlrd.XL_CELL_DATE:
+                    try:
+                        row.append(xlrd.xldate_as_datetime(v, wb.datemode))
+                    except Exception:  # noqa: BLE001
+                        row.append(clean(v))
                 else:
-                    row.append(clean(cell.value))
+                    row.append(clean(v))
+            row += [None] * (sh.ncols - len(row))
             grid.append(row)
         merged = [(r1, c1, r2 - 1, c2 - 1) for (r1, r2, c1, c2) in getattr(sh, "merged_cells", [])]
         out.append(RawSheet(sh.name, _trim(grid), merged))

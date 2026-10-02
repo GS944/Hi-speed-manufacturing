@@ -132,8 +132,12 @@ class Workspace:
         self.sorted_keys = sorted(self.by_key, key=_key_sort)
         self.lex_keys = sorted(self.by_key)
         try:
-            self.eta.fit(self.lines)
-            self.eta.predict(self.lines)
+            # instant when the completed-order history is unchanged (cached model); otherwise train in the
+            # background so pages are never blocked - forecasts appear as soon as training finishes
+            if self.eta.fit(self.lines, allow_train=False):
+                self.eta.predict(self.lines)
+            else:
+                threading.Thread(target=self._train_eta, daemon=True, name="eta-train").start()
         except Exception as e:  # noqa: BLE001
             log.warning("ETA model failed: %s", e)
         try:
@@ -149,6 +153,15 @@ class Workspace:
         dates = {k: _parse_date(v) for k, v in roles.items() if k in DATE_ROLES}
         nums = {k: to_num(v) for k, v in roles.items() if k in NUM_ROLES}
         return roles, dates, nums
+
+    def _train_eta(self) -> None:
+        try:
+            t0 = time.time()
+            if self.eta.fit(self.lines):
+                self.eta.predict(self.lines)
+            log.info("ETA model trained in background in %.1fs", time.time() - t0)
+        except Exception as e:  # noqa: BLE001
+            log.warning("ETA model failed: %s", e)
 
     def _load_ledger(self, t: DataTable, records: list[Record]) -> None:
         f = (t.profile or {}).get("fields", {})

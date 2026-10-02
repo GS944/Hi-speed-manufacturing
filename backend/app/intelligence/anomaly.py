@@ -7,10 +7,13 @@ An entry is flagged when both agree, or when the robust z-score alone is extreme
 """
 from __future__ import annotations
 
+import hashlib
 import math
 
 import numpy as np
 from sklearn.ensemble import IsolationForest
+
+_scores: dict[str, np.ndarray] = {}
 
 
 def detect(entries: list[dict]) -> tuple[list[dict], dict]:
@@ -21,8 +24,13 @@ def detect(entries: list[dict]) -> tuple[list[dict], dict]:
     vens = {v: i for i, v in enumerate(sorted({e.get("vendor") or "" for e in rows}))}
     X = np.array([[ops[e["operation"]], vens[e.get("vendor") or ""], math.log1p(e["unit_cost"]),
                    math.log1p(e.get("qty") or 0), e.get("weight") or 0] for e in rows])
-    forest = IsolationForest(n_estimators=200, contamination=0.03, random_state=3).fit(X)
-    iso = forest.decision_function(X)            # < 0 = anomalous
+    key = hashlib.sha256(X.tobytes()).hexdigest()
+    iso = _scores.get(key)
+    if iso is None:                              # unchanged job-work entries -> reuse the previous scores
+        forest = IsolationForest(n_estimators=100, contamination=0.03, random_state=3).fit(X)
+        iso = forest.decision_function(X)        # < 0 = anomalous
+        _scores.clear()
+        _scores[key] = iso
     by_op: dict[str, list[float]] = {}
     for e in rows:
         by_op.setdefault(e["operation"], []).append(math.log1p(e["unit_cost"]))
