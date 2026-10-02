@@ -26,8 +26,10 @@ Backblaze (files). Nothing is lost when the free server sleeps or redeploys.
 
 ### What "free" costs you
 - **Render Free sleeps after 15 minutes without visits.** The first visit afterwards takes 30–60 seconds while it
-  wakes up. The sign-in page shows *"server is waking up"* and retries by itself. To avoid the wait, see step 7
-  (optional keep-awake ping).
+  wakes up. The sign-in page shows *"server is waking up"* and retries by itself. Step 7 (UptimeRobot) keeps it awake.
+- **The free server has a small processor.** Everyday pages answer in well under a second, but analysing an uploaded
+  workbook takes about a minute. Completion-date forecasts may appear a little after the rest of the dashboard while
+  the model re-trains in the background.
 - Vercel Hobby is meant for non-commercial use. If the business grows, upgrade only that piece (Vercel Pro), or
   follow "Alternative B" below.
 
@@ -35,6 +37,10 @@ Backblaze (files). Nothing is lost when the free server sleeps or redeploys.
 
 ## Step 1 – Database: Neon (5 minutes)
 
+There are two routes to the same free Neon database. If neon.tech tells you to *use the Neon integration in Vercel*
+(your Neon account is managed by Vercel), use route B.
+
+### Route A – directly on neon.tech
 1. Go to https://neon.tech and **Sign up** (GitHub or Google login is fine).
 2. **Create project**:
    - Project name: `hi-speed`
@@ -46,6 +52,16 @@ Backblaze (files). Nothing is lost when the free server sleeps or redeploys.
    ```
    Keep it somewhere safe. This is your **`DATABASE_URL`**.
 
+### Route B – through Vercel (Neon integration)
+1. On https://vercel.com, open **Storage** (top menu), click **Create Database**, choose **Neon**, and click **Continue**.
+2. Accept the terms, then choose **Region: Singapore**, **Plan: Free**, **Database name: `hi-speed`**.
+3. **Custom prefix:** leave empty. **Create database branch for deployment:** none/off (the website never uses the
+   database). **Environments:** Production only.
+4. Open the new database, go to the **.env.local** tab, click **Show secret**, and copy the value after
+   `DATABASE_URL=` (without quotes). This is your **`DATABASE_URL`**.
+
+Either the pooled (`-pooler`) or the direct connection string works.
+
 ## Step 2 – File storage: Backblaze B2 (7 minutes)
 
 1. Go to https://www.backblaze.com/sign-up/cloud-storage and create an account.
@@ -54,8 +70,8 @@ Backblaze (files). Nothing is lost when the free server sleeps or redeploys.
    - Files in bucket are: **Private**
    - Default encryption: **Enable**
    - Object lock: disabled
-3. On the new bucket's card, copy the **Endpoint**, e.g. `s3.us-east-005.backblazeb2.com`.
-   Put `https://` in front → this is your **`S3_ENDPOINT_URL`** (`https://s3.us-east-005.backblazeb2.com`).
+3. On the new bucket's card, copy the **Endpoint**, e.g. `s3.us-east-005.backblazeb2.com`. This is your
+   **`S3_ENDPOINT_URL`**. It works with or without `https://` in front, and the storage region is detected from it.
 4. **Application Keys ▸ Add a New Application Key**:
    - Name: `ordertrack`
    - Allow access to bucket(s): **only the bucket you just made**
@@ -75,7 +91,7 @@ Backblaze (files). Nothing is lost when the free server sleeps or redeploys.
    | Key | Value |
    |---|---|
    | `DATABASE_URL` | Neon connection string |
-   | `S3_ENDPOINT_URL` | `https://s3.<region>.backblazeb2.com` |
+   | `S3_ENDPOINT_URL` | `s3.<region>.backblazeb2.com` (with or without `https://`) |
    | `S3_BUCKET` | your bucket name |
    | `S3_ACCESS_KEY_ID` | Backblaze keyID |
    | `S3_SECRET_ACCESS_KEY` | Backblaze applicationKey |
@@ -83,6 +99,10 @@ Backblaze (files). Nothing is lost when the free server sleeps or redeploys.
 5. Click **Apply**. The first build takes about 5–8 minutes: it installs packages and pre-trains the ML model.
 6. When the service shows **Live**, copy its URL from the top of the page, e.g. `https://hi-speed-backend.onrender.com`.
 7. Open `https://hi-speed-backend.onrender.com/api/health`. You should see `"status":"ok","database":true`.
+8. **Deploy only tested code:** open **hi-speed-backend ▸ Settings ▸ Build & Deploy ▸ Auto-Deploy** and choose
+   **After CI Checks Pass**. Render then waits for the repository's automatic tests (GitHub ▸ Actions ▸ CI) to
+   succeed before deploying a push, so a broken change never reaches the live site.
+
 > Everything else (`JWT_SECRET`, `CORS_ORIGINS`, …) was filled in by the blueprint. `CORS_ORIGINS` is already set to
 > `https://hi-speed-manufacturing.vercel.app`. If you use another domain, change it there.
 
@@ -118,14 +138,21 @@ git add -A
 git commit -m "Describe the change"
 git push
 ```
-Vercel and Render both redeploy automatically. Your data in Neon and Backblaze is untouched.
+Every push runs the automatic checks (**GitHub ▸ Actions ▸ CI**: backend lint and 14 tests, website type-check and
+build, about 2 minutes). Vercel redeploys the website, and Render redeploys the backend once the checks pass (step 3.8).
+Your data in Neon and Backblaze is untouched. If a check fails, open it in GitHub Actions to see why; nothing is
+deployed to Render until it is fixed.
 
-## Step 7 (optional) – Avoid the wake-up delay
-Render Free sleeps after 15 minutes without traffic. A free uptime monitor that visits every 10 minutes keeps it awake
-during working hours:
-1. https://uptimerobot.com → free account → **Add New Monitor** → *HTTP(s)*
-2. URL: `https://<your-backend>.onrender.com/api/health`, interval: **10 minutes**
-3. You also get an email if the backend ever goes down.
+To run the same checks on your own computer first: `python run.py --test` (backend) and `npm --prefix frontend run build`.
+
+## Step 7 (recommended) – Keep it awake with UptimeRobot
+Render Free sleeps after 15 minutes without traffic. A free uptime monitor keeps it awake and emails you if it ever
+goes down:
+1. https://uptimerobot.com ▸ **Register for FREE** ▸ confirm your email.
+2. **+ New monitor** ▸ type **HTTP / website monitoring**.
+3. URL: `https://<your-backend>.onrender.com/api/health`, interval: **5 minutes** (the free minimum), notify by
+   **E-mail** ▸ **Create monitor**. It shows **Up** within a few minutes. (UptimeRobot checks with `HEAD` requests;
+   the health endpoint supports both `GET` and `HEAD`.)
 
 One always-on service fits inside Render's 750 free hours per month.
 
@@ -148,7 +175,8 @@ One always-on service fits inside Render's 750 free hours per month.
 | Accountability | Every sign-in, upload, edit, print and account change is in **Settings ▸ Audit log** |
 | Source code | No data, secrets or passwords in the repository; `.gitignore` blocks Excel files, databases and `.env` |
 
-**Keep the GitHub repository private.** It holds no data now, but private is still the right default.
+**The repository can be public**: it contains only code, with no data, passwords or keys. Keep it that way: never
+commit workbooks or `.env` files (`.gitignore` blocks them), and keep all secrets in Render / Vercel settings.
 
 ### Backups
 - **Neon** keeps a restore window (point-in-time restore) on the free plan: Project ▸ Branches ▸ Restore.
@@ -164,12 +192,14 @@ One always-on service fits inside Render's 750 free hours per month.
 |---|---|---|
 | Sign-in page: *"Cannot reach the application server"* for over 2 minutes | `VITE_API_URL` missing or wrong, or the backend failed | Open `<backend>/api/health`. If that works, fix `VITE_API_URL` in Vercel and **Redeploy** |
 | Browser console: *blocked by CORS policy* | Your site address is not in `CORS_ORIGINS` | Render ▸ Environment: set `CORS_ORIGINS` to the exact address, e.g. `https://hi-speed-manufacturing.vercel.app` |
-| Render log: *Cannot reach the S3 bucket* | Wrong endpoint, bucket name or keys | Re-check the four `S3_…` values (endpoint must start with `https://`) |
+| Render log: *Cannot reach the S3 bucket* | Wrong endpoint, bucket name or keys | Re-check the four `S3_…` values |
+| Render did not deploy a push | The automatic checks failed (step 3.8) | GitHub ▸ Actions ▸ CI shows the failing test or build step |
+| UptimeRobot reports *405 Method Not Allowed* | An old backend version without `HEAD` support | Redeploy the latest code (Render ▸ Manual Deploy ▸ Deploy latest commit) |
 | Render log: database connection error | `DATABASE_URL` wrong, or the Neon project was deleted | Copy the connection string again from Neon ▸ Connect |
 | *"New sign-ups are turned off"* | Sign-ups were switched off | An existing user adds the account under Settings ▸ Users, or switches sign-ups back on |
 | Account locked | 5 wrong passwords | Wait for the lock to expire, or another user clicks **Unlock** under Settings ▸ Users |
 | Everyone forgot their password | — | In Neon ▸ SQL Editor run `DELETE FROM users;` (data is kept). The next visitor can create a new account on the Create account page |
-| First page after a pause is slow | Free server waking up | Normal, or set up step 7 |
+| First page after a pause is slow | Free server waking up | Set up step 7 (UptimeRobot) |
 
 ---
 
@@ -178,16 +208,24 @@ One always-on service fits inside Render's 750 free hours per month.
 **A. Your own computer or office server (free, data stays on site):** `python run.py` (see README). Share it on the
 office network at `http://<pc-ip>:8000`.
 
-**B. Oracle Cloud "Always Free" VM (free, always on, 200 GB disk; needs card verification):** create an Ubuntu VM,
-install Docker, then:
-```sh
-git clone https://github.com/GS944/Hi-speed-manufacturing.git && cd Hi-speed-manufacturing
-docker build -t ordertrack .
-docker run -d --restart unless-stopped -p 8000:8000 -v ordertrack-data:/data \
-  -e CORS_ORIGINS=https://your.domain --name ordertrack ordertrack
-```
-Put Caddy in front for HTTPS (e.g. with a free DuckDNS name). This uses the built-in SQLite and disk storage, so Neon
-and Backblaze are not needed.
+**B. Oracle Cloud "Always Free" VM (much faster: 4 ARM cores / 24 GB; free, but needs card verification and some
+server setup):** ready-made files are in `deploy/oracle/` (Docker Compose + Caddy for automatic HTTPS):
+1. Create an Ubuntu 24.04 **VM.Standard.A1.Flex** instance (Always Free), open TCP **80** and **443** in its subnet's
+   security list, and point a free **DuckDNS** name at its public IP.
+2. On the server:
+   ```sh
+   curl -fsSL https://raw.githubusercontent.com/GS944/Hi-speed-manufacturing/main/deploy/oracle/setup.sh -o setup.sh
+   sudo bash setup.sh                                   # installs Docker, opens the firewall, creates the settings file
+   sudo nano /opt/ordertrack/deploy/oracle/.env         # DOMAIN + the same values as on Render
+   sudo bash setup.sh                                   # builds, starts and gets the HTTPS certificate
+   ```
+3. Set Vercel's `VITE_API_URL` to `https://<your-name>.duckdns.org` and redeploy. Update later with
+   `sudo bash /opt/ordertrack/deploy/oracle/update.sh`.
 
-**C. Paid but simplest:** Render Starter plus a 10 GB disk (about $9.50 per month). Remove the Neon/Backblaze variables
-and set `DATA_DIR=/var/data` with a disk mounted there.
+Oracle may stop Always Free servers that stay idle for 7 days; the data is safe in Neon/Backblaze, so you can just
+start the server again (or upgrade the account to Pay-As-You-Go, which stays free within Always Free limits).
+
+**C. Paid but simplest:** Render Starter plus a 10 GB disk (about $9.50 per month), or keep Neon/Backblaze and just
+switch the Render plan to Starter for a full processor ($7 per month).
+
+> Hugging Face Spaces was considered too, but since July 2026 Docker Spaces require a paid PRO plan.

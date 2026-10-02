@@ -122,6 +122,8 @@ build time when the UI and API are on different domains.
 ```sh
 python run.py --test
 ```
+GitHub runs the same tests plus the website build on every push (**Actions ▸ CI**). Render deploys the backend only
+after these checks pass (see DEPLOYMENT.md, step 3.8).
 These are unit tests for parsing, rules, formula discovery, entity resolution and segmentation, plus an end-to-end
 API test: upload → ML profiling → live status → progress update → annexure submit → PDF/XLSX.
 
