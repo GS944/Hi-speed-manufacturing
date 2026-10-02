@@ -22,7 +22,8 @@ RUN pip install -r requirements.txt
 COPY backend/ ./
 RUN DATA_DIR=/tmp/build-data python -m app.intelligence.column_model   # bake the model into the image
 COPY --from=ui /ui/dist /app/frontend/dist
-RUN useradd --create-home --uid 10001 app && mkdir -p /data && chown -R app:app /data /app
+# uid 1000 matches Hugging Face Spaces (and most hosts), which run containers as user 1000
+RUN useradd --create-home --uid 1000 app && mkdir -p /data && chown -R app:app /data /app
 USER app
 VOLUME ["/data"]
 EXPOSE 8000
