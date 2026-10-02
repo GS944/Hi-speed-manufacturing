@@ -1,0 +1,25 @@
+# runtime data - never commit uploaded workbooks, databases, models or secrets
+backend/data/
+backend/model_cache/
+backend/.env
+backend/.env.*
+!backend/.env.example
+.env
+*.bundle
+*.xls
+*.xlsx
+*.xlsm
+*.csv
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+
+frontend/node_modules/
+frontend/dist/
+*.tsbuildinfo
+__pycache__/
+*.pyc
+.pytest_cache/
+.vercel
+.DS_Store

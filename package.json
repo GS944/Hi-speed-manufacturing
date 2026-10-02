@@ -1,0 +1,11 @@
+{
+  "name": "hi-speed-manufacturing",
+  "private": true,
+  "description": "OrderTrack Pro - order tracking, job-work annexures and printing (FastAPI + React)",
+  "scripts": {
+    "start": "python run.py",
+    "dev": "python run.py --dev",
+    "test": "python run.py --test",
+    "build": "npm --prefix frontend ci && npm --prefix frontend run build"
+  }
+}

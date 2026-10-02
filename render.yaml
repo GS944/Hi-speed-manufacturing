@@ -1,0 +1,46 @@
+# Render Blueprint - backend API on Render's FREE plan.
+# Free instances have no persistent disk, so data lives in free external services:
+#   database -> Neon (PostgreSQL)      workbook files -> Backblaze B2 (S3-compatible, 10 GB free)
+# Render dashboard > New > Blueprint > pick this repository. Full walkthrough: DEPLOYMENT.md
+services:
+  - type: web
+    name: hi-speed-backend
+    runtime: python
+    plan: free
+    region: singapore
+    rootDir: backend
+    # pre-trains the column classifier during the build so a sleeping free instance wakes up fast
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt && python -m app.intelligence.column_model
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips="*" --timeout-keep-alive 75
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.1
+      - key: ENV
+        value: production
+      - key: MODELS_DIR
+        value: model_cache
+      - key: CORS_ORIGINS
+        value: https://hi-speed-manufacturing.vercel.app
+      - key: CORS_ORIGIN_REGEX       # also allow this project's Vercel preview deployments
+        value: https://hi-speed-manufacturing(-[a-z0-9-]+)?\.vercel\.app
+      - key: ALLOW_SIGNUP            # "Create account" page on; switch it off any time in Settings > Users
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: STORAGE_QUOTA_GB
+        value: "9"
+      - key: MAX_UPLOAD_MB
+        value: "200"
+      # ---- you paste these four values when creating the blueprint (see DEPLOYMENT.md)
+      - key: DATABASE_URL            # Neon connection string
+        sync: false
+      - key: S3_ENDPOINT_URL         # e.g. https://s3.us-east-005.backblazeb2.com
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false

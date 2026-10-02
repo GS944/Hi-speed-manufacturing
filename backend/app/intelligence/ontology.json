@@ -1,0 +1,884 @@
+{
+  "version": 3,
+  "about": "Knowledge base for the data-intelligence engine. Roles, table types, stage templates and completion rules are data - edit this file (or extend it from the UI mapping editor) to teach the engine new vocabularies. Header examples and value samples are used as TRAINING DATA for the neural column classifier; nothing here is matched literally.",
+  "roles": {
+    "order_no": {
+      "label": "Order No.",
+      "kind": "int_seq",
+      "headers": [
+        "order num",
+        "order no",
+        "order number",
+        "order #",
+        "ord no",
+        "job no",
+        "work order",
+        "wo no",
+        "rc no",
+        "route card no",
+        "so no",
+        "sales order",
+        "order id",
+        "order ref"
+      ]
+    },
+    "customer_code": {
+      "label": "Customer Code",
+      "kind": "int_code",
+      "headers": [
+        "custom code",
+        "cust code",
+        "customer code",
+        "party code",
+        "client code",
+        "customer id",
+        "cust id",
+        "buyer code",
+        "account code"
+      ]
+    },
+    "customer_name": {
+      "label": "Customer",
+      "kind": "name",
+      "headers": [
+        "customer",
+        "customer name",
+        "client",
+        "client name",
+        "party",
+        "party name",
+        "buyer",
+        "name",
+        "account name"
+      ]
+    },
+    "order_type": {
+      "label": "Order Type",
+      "kind": "category",
+      "headers": [
+        "bl/pur",
+        "type",
+        "order type",
+        "type list",
+        "job type",
+        "purchase type",
+        "mode",
+        "nature"
+      ],
+      "examples": [
+        "Purchase",
+        "Trade",
+        "Blank",
+        "REWORK",
+        "JOB WORK",
+        "REPLACEMENT"
+      ]
+    },
+    "order_date": {
+      "label": "Order Date",
+      "kind": "date",
+      "headers": [
+        "order date",
+        "po date",
+        "date of order",
+        "received date",
+        "entry date",
+        "booking date",
+        "order dt"
+      ]
+    },
+    "due_date": {
+      "label": "Due / ETD",
+      "kind": "date",
+      "headers": [
+        "etd",
+        "eta",
+        "due date",
+        "delivery date",
+        "target date",
+        "commit date",
+        "promised date",
+        "required by",
+        "dispatch due",
+        "due dt",
+        "ship by"
+      ]
+    },
+    "category": {
+      "label": "Category",
+      "kind": "category",
+      "headers": [
+        "spares",
+        "category",
+        "product group",
+        "group",
+        "family",
+        "segment",
+        "brand",
+        "line",
+        "class"
+      ],
+      "examples": [
+        "HI-SPEED SPARES",
+        "Tungaloy spares",
+        "TAEGUTEC SPARES",
+        "WIDIA SPARES",
+        "CLASSIC SPARES",
+        "WITHOUT SPARES",
+        "JOB WORK",
+        "CUSTOMER SPARES"
+      ]
+    },
+    "item_description": {
+      "label": "Item",
+      "kind": "text_item",
+      "headers": [
+        "item",
+        "description",
+        "item description",
+        "product",
+        "product description",
+        "part",
+        "part name",
+        "part no",
+        "component",
+        "material description",
+        "item name",
+        "particulars"
+      ]
+    },
+    "colour_tag": {
+      "label": "Colour Tag",
+      "kind": "category",
+      "headers": [
+        "colour",
+        "color",
+        "colour code",
+        "tag colour",
+        "label colour",
+        "flag"
+      ],
+      "examples": [
+        "RED",
+        "Blue",
+        "Yellow",
+        "Green",
+        "GREEN",
+        "BLUE"
+      ]
+    },
+    "customer_po": {
+      "label": "Customer PO",
+      "kind": "doc_ref",
+      "headers": [
+        "customer po no",
+        "customer po",
+        "po no",
+        "po number",
+        "purchase order",
+        "cust po",
+        "po ref",
+        "loi",
+        "indent no"
+      ]
+    },
+    "order_qty": {
+      "label": "Order Qty",
+      "kind": "qty",
+      "headers": [
+        "order qty",
+        "ordered qty",
+        "qty ordered",
+        "po qty",
+        "required qty",
+        "order quantity",
+        "demand qty"
+      ]
+    },
+    "issued_qty": {
+      "label": "Issued Qty",
+      "kind": "qty",
+      "headers": [
+        "issued qty",
+        "issue qty",
+        "qty issued",
+        "released qty",
+        "material issued",
+        "start qty",
+        "input qty"
+      ]
+    },
+    "quantity": {
+      "label": "Quantity",
+      "kind": "qty",
+      "headers": [
+        "qty",
+        "quantity",
+        "nos",
+        "pcs",
+        "no of pcs",
+        "qty nos",
+        "units",
+        "count"
+      ]
+    },
+    "material": {
+      "label": "Material",
+      "kind": "category",
+      "headers": [
+        "material",
+        "grade",
+        "material grade",
+        "steel grade",
+        "raw material",
+        "mat",
+        "item no",
+        "moc"
+      ],
+      "examples": [
+        "En19",
+        "EN-19",
+        "En24",
+        "EN-24",
+        "H13",
+        "H-13",
+        "OHNS",
+        "D2",
+        "SAE 8620",
+        "En47",
+        "HSKA100",
+        "SS"
+      ]
+    },
+    "hardness_spec": {
+      "label": "Hardness Spec",
+      "kind": "hrc_range",
+      "headers": [
+        "hardness",
+        "hrc",
+        "hardness spec",
+        "hrc spec",
+        "required hrc",
+        "hrc range",
+        "hardness required"
+      ]
+    },
+    "priority": {
+      "label": "Priority",
+      "kind": "category",
+      "headers": [
+        "request",
+        "priority",
+        "urgency",
+        "request type",
+        "delivery request",
+        "service level"
+      ],
+      "examples": [
+        "Regular",
+        "Emergency",
+        "Within 1 week",
+        "Within 10 days",
+        "Within 2 weeks"
+      ]
+    },
+    "coating_date": {
+      "label": "Coating Date",
+      "kind": "date",
+      "headers": [
+        "coating date",
+        "coated date",
+        "finish date",
+        "finishing date",
+        "plating date",
+        "blackening date"
+      ]
+    },
+    "coating_qty": {
+      "label": "Coating Qty",
+      "kind": "qty",
+      "headers": [
+        "coating qty",
+        "coated qty",
+        "finished qty",
+        "finishing qty",
+        "qty coated",
+        "plating qty"
+      ]
+    },
+    "reject_qty": {
+      "label": "Reject Qty",
+      "kind": "qty_zero",
+      "headers": [
+        "reject qty",
+        "rejected qty",
+        "rejection",
+        "rej qty",
+        "scrap qty",
+        "ng qty",
+        "prod rej",
+        "insp rej"
+      ]
+    },
+    "despatch_date": {
+      "label": "Despatch Date",
+      "kind": "date",
+      "headers": [
+        "despatch date",
+        "dispatch date",
+        "shipped date",
+        "delivery dt",
+        "ship date",
+        "sent date",
+        "delivered on"
+      ]
+    },
+    "despatch_qty": {
+      "label": "Despatch Qty",
+      "kind": "qty",
+      "headers": [
+        "despatch qty",
+        "dispatch qty",
+        "shipped qty",
+        "delivered qty",
+        "qty despatched",
+        "qty shipped",
+        "final despatch qty"
+      ]
+    },
+    "stock_qty": {
+      "label": "Stock / Balance",
+      "kind": "qty_zero",
+      "headers": [
+        "stock",
+        "balance",
+        "balance qty",
+        "pending qty",
+        "wip",
+        "on hand",
+        "closing stock",
+        "remaining"
+      ]
+    },
+    "invoice_ref": {
+      "label": "Invoice / DC Ref",
+      "kind": "invoice_text",
+      "headers": [
+        "inv no / dc no",
+        "invoice no",
+        "inv no",
+        "bill no",
+        "invoice",
+        "dc no / inv",
+        "invoice ref",
+        "bill ref"
+      ]
+    },
+    "remarks": {
+      "label": "Remarks",
+      "kind": "remarks",
+      "headers": [
+        "remarks",
+        "notes",
+        "comment",
+        "comments",
+        "note",
+        "observation",
+        "vendor remarks",
+        "column1",
+        "column2"
+      ]
+    },
+    "serial_no": {
+      "label": "Sl. No.",
+      "kind": "int_seq",
+      "headers": [
+        "sl no",
+        "sl. no.",
+        "s.no",
+        "sr no",
+        "serial",
+        "serial no",
+        "#",
+        "no.",
+        "sl n0",
+        "index"
+      ]
+    },
+    "doc_no": {
+      "label": "DC / Doc No.",
+      "kind": "doc_ref",
+      "headers": [
+        "dc no",
+        "dc number",
+        "challan no",
+        "delivery challan no",
+        "document no",
+        "doc no",
+        "voucher no",
+        "gate pass no"
+      ]
+    },
+    "issue_date": {
+      "label": "Issue / DC Date",
+      "kind": "date",
+      "headers": [
+        "issue date",
+        "dc date",
+        "challan date",
+        "sent on",
+        "out date",
+        "invoice date",
+        "issued on",
+        "date"
+      ]
+    },
+    "vendor_name": {
+      "label": "Vendor",
+      "kind": "name",
+      "headers": [
+        "vendor name",
+        "vendor",
+        "supplier",
+        "supplier name",
+        "subcontractor",
+        "job worker",
+        "processor",
+        "party name"
+      ]
+    },
+    "operation": {
+      "label": "Operation",
+      "kind": "category",
+      "headers": [
+        "operation",
+        "process",
+        "operation name",
+        "job",
+        "work type",
+        "activity",
+        "process name",
+        "service"
+      ],
+      "examples": [
+        "HEAT TREATMENT",
+        "BLANK MILLING",
+        "GRINDING",
+        "COOLANT HOLE",
+        "TURNING",
+        "ANGLE MILLING",
+        "TIP SEAT",
+        "TIP SEAT & CLEAREANCE",
+        "BLACKENING",
+        "WIRE CUT",
+        "DRILLING",
+        "SURFACE GRINDING",
+        "BEND REMOVAL"
+      ]
+    },
+    "unit_cost": {
+      "label": "Unit Cost",
+      "kind": "money",
+      "headers": [
+        "unit cost",
+        "unit price",
+        "rate",
+        "price",
+        "cost per unit",
+        "rate per piece",
+        "unit rate",
+        "cost",
+        "new price"
+      ]
+    },
+    "value_of_goods": {
+      "label": "Value of Goods",
+      "kind": "money_flat",
+      "headers": [
+        "value of goods",
+        "value",
+        "goods value",
+        "declared value",
+        "approx value",
+        "material value",
+        "amount"
+      ]
+    },
+    "old_price": {
+      "label": "Old Price",
+      "kind": "money",
+      "headers": [
+        "old price",
+        "previous price",
+        "old rate",
+        "last price",
+        "o-p"
+      ]
+    },
+    "weight": {
+      "label": "Weight (kg)",
+      "kind": "weight",
+      "headers": [
+        "wt",
+        "weight",
+        "weight kg",
+        "net wt",
+        "kgs",
+        "scrap in kgs",
+        "gross weight"
+      ]
+    },
+    "inward_doc": {
+      "label": "Inward DC",
+      "kind": "doc_ref",
+      "headers": [
+        "inward dc",
+        "inward dc no",
+        "grn no",
+        "receipt no",
+        "return dc",
+        "inward no",
+        "mrn no"
+      ]
+    },
+    "inward_date": {
+      "label": "Inward Date",
+      "kind": "date",
+      "headers": [
+        "inward date",
+        "received on",
+        "return date",
+        "grn date",
+        "receipt date",
+        "in date",
+        "received date back"
+      ]
+    },
+    "hardness_checked": {
+      "label": "HRC Checked",
+      "kind": "hrc_pair",
+      "headers": [
+        "hrc checked",
+        "hardness checked",
+        "measured hrc",
+        "actual hrc",
+        "hrc result",
+        "hardness result",
+        "hrc observed"
+      ]
+    },
+    "tariff_code": {
+      "label": "Tariff / HSN",
+      "kind": "tariff",
+      "headers": [
+        "tariff",
+        "tarrif",
+        "hsn",
+        "sac",
+        "hsn code",
+        "sac code",
+        "tariff code"
+      ]
+    },
+    "address": {
+      "label": "Address",
+      "kind": "address",
+      "headers": [
+        "add1",
+        "add2",
+        "add3",
+        "add4",
+        "address",
+        "address line",
+        "street",
+        "city",
+        "location"
+      ]
+    },
+    "gstin": {
+      "label": "GSTIN / TIN",
+      "kind": "gstin",
+      "headers": [
+        "tin no",
+        "gst no",
+        "gstin",
+        "gst number",
+        "tax id",
+        "vat no",
+        "cst"
+      ]
+    },
+    "phone": {
+      "label": "Phone",
+      "kind": "phone",
+      "headers": [
+        "phone",
+        "mobile",
+        "contact",
+        "contact no",
+        "tel",
+        "phone no"
+      ]
+    },
+    "size": {
+      "label": "Size",
+      "kind": "size",
+      "headers": [
+        "size",
+        "shank",
+        "dimension",
+        "section",
+        "dia",
+        "sh",
+        "dh",
+        "th"
+      ]
+    }
+  },
+  "kinds_note": "kind = value-distribution family used to synthesise training columns (see intelligence/synth.py)",
+  "table_types": {
+    "orders": {
+      "label": "Order Book",
+      "key_role": "order_no",
+      "key_mode": "primary",
+      "weights": {
+        "order_no": 3,
+        "order_date": 2,
+        "order_qty": 2,
+        "item_description": 1.5,
+        "despatch_qty": 2,
+        "due_date": 1,
+        "issued_qty": 1,
+        "customer_code": 1,
+        "despatch_date": 1.5,
+        "priority": 0.5,
+        "coating_qty": 0.5
+      },
+      "required": [
+        "order_no"
+      ],
+      "min_rows": 3
+    },
+    "job_work_ledger": {
+      "label": "Job-Work / Annexure Ledger",
+      "key_role": "order_no",
+      "key_mode": "reference",
+      "weights": {
+        "operation": 3,
+        "vendor_name": 2.5,
+        "unit_cost": 2,
+        "issue_date": 1.5,
+        "value_of_goods": 1.5,
+        "inward_date": 1,
+        "inward_doc": 1,
+        "hardness_checked": 1,
+        "order_no": 1.5,
+        "weight": 0.5,
+        "hardness_spec": 0.5,
+        "quantity": 0.5
+      },
+      "required": [
+        "operation"
+      ],
+      "min_rows": 3
+    },
+    "vendor_master": {
+      "label": "Vendor Master",
+      "key_role": "vendor_name",
+      "key_mode": "lookup",
+      "weights": {
+        "vendor_name": 2,
+        "address": 3,
+        "gstin": 2,
+        "phone": 1
+      },
+      "required": [
+        "address"
+      ],
+      "min_rows": 2
+    },
+    "customer_master": {
+      "label": "Customer Master",
+      "key_role": "customer_code",
+      "key_mode": "lookup",
+      "weights": {
+        "customer_code": 3,
+        "customer_name": 3,
+        "colour_tag": 1
+      },
+      "required": [
+        "customer_name"
+      ],
+      "min_rows": 2,
+      "max_columns": 6
+    },
+    "price_list": {
+      "label": "Price / Rate List",
+      "key_role": "item_description",
+      "key_mode": "lookup",
+      "weights": {
+        "unit_cost": 3,
+        "old_price": 2,
+        "item_description": 1.5,
+        "size": 1
+      },
+      "required": [
+        "unit_cost"
+      ],
+      "min_rows": 2
+    },
+    "lookup_list": {
+      "label": "Lookup List",
+      "key_role": null,
+      "key_mode": "none",
+      "weights": {},
+      "required": [],
+      "max_columns": 2,
+      "min_rows": 1
+    }
+  },
+  "stage_templates": [
+    {
+      "key": "received",
+      "label": "Order Received",
+      "requires": [
+        "order_date"
+      ],
+      "when": {
+        "present": "order_date"
+      },
+      "date_role": "order_date",
+      "detail": "Order booked"
+    },
+    {
+      "key": "issued",
+      "label": "Material Issued",
+      "requires": [
+        "issued_qty"
+      ],
+      "when": {
+        "gt": [
+          "issued_qty",
+          0
+        ]
+      },
+      "qty_role": "issued_qty",
+      "detail": "Raw material issued to production"
+    },
+    {
+      "key": "job_work",
+      "label": "Job Work / Operations",
+      "source": "linked_ledger",
+      "detail": "Operations at vendors (annexure DCs)"
+    },
+    {
+      "key": "coating",
+      "label": "Coating / Finishing",
+      "requires_any": [
+        "coating_date",
+        "coating_qty"
+      ],
+      "when": {
+        "any": [
+          {
+            "present": "coating_date"
+          },
+          {
+            "gt": [
+              "coating_qty",
+              0
+            ]
+          }
+        ]
+      },
+      "date_role": "coating_date",
+      "qty_role": "coating_qty",
+      "detail": "Coating and finishing"
+    },
+    {
+      "key": "despatch",
+      "label": "Despatched",
+      "requires_any": [
+        "despatch_qty",
+        "despatch_date"
+      ],
+      "when": {
+        "any": [
+          {
+            "gt": [
+              "despatch_qty",
+              0
+            ]
+          },
+          {
+            "present": "despatch_date"
+          }
+        ]
+      },
+      "date_role": "despatch_date",
+      "qty_role": "despatch_qty",
+      "detail": "Goods despatched to customer"
+    }
+  ],
+  "completion_rules": [
+    {
+      "label": "Despatched quantity meets the order",
+      "requires": [
+        "despatch_qty",
+        "order_qty"
+      ],
+      "when": {
+        "gte": [
+          "despatch_qty",
+          "order_qty"
+        ]
+      }
+    },
+    {
+      "label": "Despatched and no balance stock",
+      "requires": [
+        "despatch_qty",
+        "stock_qty"
+      ],
+      "when": {
+        "all": [
+          {
+            "gt": [
+              "despatch_qty",
+              0
+            ]
+          },
+          {
+            "lte": [
+              "stock_qty",
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "label": "Despatch date recorded",
+      "requires": [
+        "despatch_date"
+      ],
+      "only_if_missing": [
+        "despatch_qty"
+      ],
+      "when": {
+        "present": "despatch_date"
+      }
+    }
+  ],
+  "urgent_terms": [
+    "emergency",
+    "urgent",
+    "immediate",
+    "critical",
+    "asap",
+    "rush"
+  ],
+  "ledger_link": {
+    "date_tolerance_days": 3
+  }
+}
