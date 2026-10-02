@@ -92,7 +92,7 @@ app.include_router(data_routes.router)
 app.include_router(order_routes.router)
 
 
-@app.get("/api/health")
+@app.api_route("/api/health", methods=["GET", "HEAD"])   # HEAD: uptime monitors such as UptimeRobot
 def health():
     """Liveness + readiness: database reachable, models warmed up."""
     try:
